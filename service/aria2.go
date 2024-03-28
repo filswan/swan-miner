@@ -305,7 +305,7 @@ func (aria2Service *Aria2Service) StartDownload(aria2Client *client.Aria2Client,
 			break
 		}
 
-		if len(deal2Download.DealCid) == 0 {
+		if deal2Download.Type != 1 && len(deal2Download.DealCid) == 0 {
 			UpdateStatusAndLog(deal2Download, DEAL_STATUS_IMPORT_FAILED, "not found the deal on the chain")
 			continue
 		}
