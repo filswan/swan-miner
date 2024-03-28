@@ -320,6 +320,10 @@ func (aria2Service *Aria2Service) StartDownload(aria2Client *client.Aria2Client,
 				continue
 			}
 		} else if lotusService.MarketVersion == constants.MARKET_VERSION_2 {
+			if deal2Download.Type == 1 {
+				aria2Service.StartDownload4Deal(deal2Download, aria2Client, swanClient)
+				return
+			}
 			_, graphqlApi, err := config.GetRpcInfoByFile(filepath.Join(config.GetConfig().Market.Repo, "config.toml"))
 			if err != nil {
 				logs.GetLogger().Errorf("get graphqlApi from configuration file failed, error: %+v", err)
