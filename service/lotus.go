@@ -154,8 +154,13 @@ func (lotusService *LotusService) StartImport(swanClient *swan.SwanClient) {
 
 		lotusService.importingDirs.Store(filepath.Dir(deal.FilePath), struct{}{})
 		go func(minerId string, dealId uint64, onChainStatus *string, onChainMessage string, deal *model.OfflineDeal, aria2AutoDeleteCarFile bool) {
-			logs.GetLogger().Infof("ddo:: AllocationID: %d, Type: %d", deal.AllocationID, deal.Type)
+			logs.GetLogger().Infof("current deal, AllocationID: %d, Type: %d", deal.AllocationID, deal.Type)
 			if deal.Type == 1 {
+				if deal.AllocationID == 0 {
+					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "allocationId is invalid")
+					lotusService.importingDirs.Delete(filepath.Dir(deal.FilePath))
+					return
+				}
 				market := config.GetConfig().Market
 				boostToken, err := GetBoostToken(market.Repo)
 				if err != nil {

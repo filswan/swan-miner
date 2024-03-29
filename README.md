@@ -196,6 +196,9 @@ swan-provider daemon
  export SWAN_PATH="/data/.swan"
  swan-provider set-ask --price=0 --verified-price=0 --min-piece-size=1048576 --max-piece-size=34359738368
  ```
+
+- Reboot`boostd`service
+
  - Set the `[market].publish_wallet` as a control address:
  ```
  export OLD_CONTROL_ADDRESS=`lotus-miner actor control list  --verbose | awk '{print $3}' | grep -v key | tr -s '\n'  ' '`
