@@ -197,7 +197,15 @@ swan-provider daemon
  swan-provider set-ask --price=0 --verified-price=0 --min-piece-size=1048576 --max-piece-size=34359738368
  ```
 
-- Reboot`boostd`service
+- Reboot`swan-provider`and`boostd`service
+```
+ kill -9 $(ps -ef | grep -E 'swan-provider|boostd' | grep -v grep | awk '{print$2}' )
+ 
+ ulimit -SHn 1048576
+ export SWAN_PATH="/data/.swan"
+ nohup swan-provider daemon >> swan-provider.log 2>&1 & 
+	
+```
 
  - Set the `[market].publish_wallet` as a control address:
  ```
