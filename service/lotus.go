@@ -94,6 +94,8 @@ func (lotusService *LotusService) StartImport(swanClient *swan.SwanClient) {
 		}
 
 		var onChainStatus, onChainMessage *string
+		var empty string
+		onChainMessage = &empty
 		var minerId string
 		var err error
 		var dealId uint64
@@ -152,6 +154,7 @@ func (lotusService *LotusService) StartImport(swanClient *swan.SwanClient) {
 
 		lotusService.importingDirs.Store(filepath.Dir(deal.FilePath), struct{}{})
 		go func(minerId string, dealId uint64, onChainStatus *string, onChainMessage string, deal *model.OfflineDeal, aria2AutoDeleteCarFile bool) {
+			logs.GetLogger().Infof("ddo:: AllocationID: %d, Type: %d", deal.AllocationID, deal.Type)
 			if deal.Type == 1 {
 				market := config.GetConfig().Market
 				boostToken, err := GetBoostToken(market.Repo)
@@ -184,6 +187,7 @@ func (lotusService *LotusService) StartImport(swanClient *swan.SwanClient) {
 					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, msg)
 				}
 				UpdateStatusAndLog(deal, DEAL_STATUS_IMPORTED, "deal imported")
+				lotusService.importingDirs.Delete(filepath.Dir(deal.FilePath))
 				return
 			}
 			UpdateSwanDealStatus(minerId, dealId, onChainStatus, onChainMessage, deal, aria2AutoDeleteCarFile)
@@ -262,6 +266,9 @@ func (lotusService *LotusService) StartScan(swanClient *swan.SwanClient) {
 				onChainStatus = &dealStatus
 				message = dealResp.Deal.Message
 			} else {
+				if deal.Type == 1 {
+					return
+				}
 				dealResp, err := hqlClient.GetProposalCid(deal.DealCid)
 				if err != nil {
 					logs.GetLogger().Errorf("taskName: %s, dealCid: %s, get deal info failed, error: %+v", *deal.TaskName, deal.DealCid, err)
