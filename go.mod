@@ -6,8 +6,8 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/Khan/genqlient v0.5.0
 	github.com/fatih/color v1.15.0
-	github.com/filswan/go-swan-lib v0.3.4-0.20240328095529-690220e21be8
-	github.com/filswan/swan-boost-lib v0.0.3-0.20240327105217-fc2646717f8f
+	github.com/filswan/go-swan-lib v0.3.4
+	github.com/filswan/swan-boost-lib v0.0.3
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.5.0
 	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933
@@ -19,8 +19,10 @@ require (
 	github.com/Gurpartap/async v0.0.0-20180927173644-4f7f499dd9ee // indirect
 	github.com/acarl005/stripansi v0.0.0-20180116102854-5a71ef0e047d // indirect
 	github.com/alecthomas/units v0.0.0-20231202071711-9a357b53e9c9 // indirect
+	github.com/armon/go-metrics v0.3.9 // indirect
 	github.com/bep/debounce v1.2.1 // indirect
 	github.com/blang/semver/v4 v4.0.0 // indirect
+	github.com/boltdb/bolt v1.3.1 // indirect
 	github.com/chzyer/readline v1.5.1 // indirect
 	github.com/cilium/ebpf v0.9.1 // indirect
 	github.com/cskr/pubsub v1.0.2 // indirect
@@ -51,8 +53,13 @@ require (
 	github.com/hailocab/go-hostpool v0.0.0-20160125115350-e80d13ce29ed // indirect
 	github.com/hako/durafmt v0.0.0-20200710122514-c0fb7b4da026 // indirect
 	github.com/hashicorp/go-cleanhttp v0.5.2 // indirect
+	github.com/hashicorp/go-hclog v1.3.0 // indirect
+	github.com/hashicorp/go-immutable-radix v1.3.1 // indirect
+	github.com/hashicorp/go-msgpack v0.5.5 // indirect
 	github.com/hashicorp/go-retryablehttp v0.7.4 // indirect
 	github.com/hashicorp/golang-lru/arc/v2 v2.0.5 // indirect
+	github.com/hashicorp/raft v1.3.10 // indirect
+	github.com/hashicorp/raft-boltdb v0.0.0-20171010151810-6e5ba93211ea // indirect
 	github.com/ipfs/go-bitfield v1.1.0 // indirect
 	github.com/ipfs/go-cidutil v0.1.0 // indirect
 	github.com/ipfs/go-ipfs-blocksutil v0.0.1 // indirect
@@ -80,6 +87,10 @@ require (
 	github.com/joeshaw/multierror v0.0.0-20140124173710-69b34d4ec901 // indirect
 	github.com/kilic/bls12-381 v0.1.0 // indirect
 	github.com/lib/pq v1.10.9 // indirect
+	github.com/libp2p/go-libp2p-consensus v0.0.1 // indirect
+	github.com/libp2p/go-libp2p-gorpc v0.6.0 // indirect
+	github.com/libp2p/go-libp2p-gostream v0.6.0 // indirect
+	github.com/libp2p/go-libp2p-raft v0.4.0 // indirect
 	github.com/manifoldco/promptui v0.9.0 // indirect
 	github.com/mattn/go-runewidth v0.0.14 // indirect
 	github.com/mattn/go-sqlite3 v1.14.16 // indirect
@@ -140,7 +151,7 @@ require (
 	github.com/dustin/go-humanize v1.0.1 // indirect
 	github.com/elastic/go-elasticsearch/v7 v7.14.0 // indirect
 	github.com/elastic/gosigar v0.14.2 // indirect
-	github.com/filecoin-project/boost v1.7.5-0.20240326174851-e9a50bb3730a // indirect
+	github.com/filecoin-project/boost v1.7.5-0.20240403164353-16a4de2af416 // indirect
 	github.com/filecoin-project/boost-gfm v1.26.7 // indirect
 	github.com/filecoin-project/go-address v1.1.0 // indirect
 	github.com/filecoin-project/go-amt-ipld/v2 v2.1.0 // indirect
@@ -161,7 +172,7 @@ require (
 	github.com/filecoin-project/go-statemachine v1.0.3 // indirect
 	github.com/filecoin-project/go-statestore v0.2.0 // indirect
 	github.com/filecoin-project/kubo-api-client v0.27.0 // indirect
-	github.com/filecoin-project/lotus v1.26.0-boost // indirect
+	github.com/filecoin-project/lotus v1.26.1 // indirect
 	github.com/filecoin-project/specs-actors v0.9.15 // indirect
 	github.com/filecoin-project/specs-actors/v2 v2.3.6 // indirect
 	github.com/filecoin-project/specs-actors/v3 v3.1.2 // indirect
@@ -246,7 +257,7 @@ require (
 	github.com/libp2p/go-buffer-pool v0.1.0 // indirect
 	github.com/libp2p/go-cidranger v1.1.0 // indirect
 	github.com/libp2p/go-flow-metrics v0.1.0 // indirect
-	github.com/libp2p/go-libp2p v0.33.1 // indirect
+	github.com/libp2p/go-libp2p v0.33.2 // indirect
 	github.com/libp2p/go-libp2p-asn-util v0.4.1 // indirect
 	github.com/libp2p/go-libp2p-kad-dht v0.25.2 // indirect
 	github.com/libp2p/go-libp2p-kbucket v0.6.3 // indirect
@@ -274,7 +285,7 @@ require (
 	github.com/mr-tron/base58 v1.2.0 // indirect
 	github.com/multiformats/go-base32 v0.1.0 // indirect
 	github.com/multiformats/go-base36 v0.2.0 // indirect
-	github.com/multiformats/go-multiaddr v0.12.2 // indirect
+	github.com/multiformats/go-multiaddr v0.12.3 // indirect
 	github.com/multiformats/go-multiaddr-dns v0.3.1 // indirect
 	github.com/multiformats/go-multiaddr-fmt v0.1.0 // indirect
 	github.com/multiformats/go-multibase v0.2.0 // indirect
