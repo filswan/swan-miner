@@ -53,7 +53,7 @@ export SWAN_PATH="/data/.swan"
 ### Option:one: **Prebuilt package**: See [release assets](https://github.com/filswan/go-swan-provider/releases)
 ####  Build Instructions
 ```shell
-wget --no-check-certificate https://github.com/filswan/go-swan-provider/releases/download/v2.3.0/install.sh
+wget --no-check-certificate https://github.com/filswan/go-swan-provider/releases/download/v2.4.0/install.sh
 chmod +x ./install.sh
 ./install.sh
 ```
@@ -64,7 +64,7 @@ chmod +x ./install.sh
 ```
 ulimit -SHn 1048576
 export SWAN_PATH="/data/.swan"
-nohup swan-provider-2.2.1-linux-amd64 daemon >> swan-provider.log 2>&1 & 
+nohup swan-provider-2.4.0-linux-amd64 daemon >> swan-provider.log 2>&1 & 
 ```
 ### Option:two: Source Code
 Building the `swan-provider` requires some system dependencies:
@@ -93,7 +93,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```shell
 git clone https://github.com/filswan/go-swan-provider.git
 cd go-swan-provider
-git checkout release-2.3.0
+git checkout release-2.4.0
 ./build_from_source.sh
 ```
 
@@ -172,6 +172,9 @@ swan-provider daemon
 	[Libp2p]
   	  ListenAddresses = ["/ip4/0.0.0.0/tcp/24001", "/ip6/::/tcp/24001"]   # Binding address for the libp2p host
       AnnounceAddresses = ["/ip4/209.94.92.3/tcp/24001"]                  # Addresses to explicitly announce to other peers. If not specified, all interface addresses are announced
+
+ 	[localIndexDirectory.Leveldb]
+	 Enabled = true
 	```
 	(3) Run `swan-provider` in the background.
 	```
@@ -193,6 +196,17 @@ swan-provider daemon
  export SWAN_PATH="/data/.swan"
  swan-provider set-ask --price=0 --verified-price=0 --min-piece-size=1048576 --max-piece-size=34359738368
  ```
+
+- Reboot`swan-provider`and`boostd`service
+```
+ kill -9 $(ps -ef | grep -E 'swan-provider|boostd' | grep -v grep | awk '{print$2}' )
+ 
+ ulimit -SHn 1048576
+ export SWAN_PATH="/data/.swan"
+ nohup swan-provider daemon >> swan-provider.log 2>&1 & 
+	
+```
+
  - Set the `[market].publish_wallet` as a control address:
  ```
  export OLD_CONTROL_ADDRESS=`lotus-miner actor control list  --verbose | awk '{print $3}' | grep -v key | tr -s '\n'  ' '`

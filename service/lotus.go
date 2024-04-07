@@ -94,6 +94,8 @@ func (lotusService *LotusService) StartImport(swanClient *swan.SwanClient) {
 		}
 
 		var onChainStatus, onChainMessage *string
+		var empty string
+		onChainMessage = &empty
 		var minerId string
 		var err error
 		var dealId uint64
@@ -109,48 +111,90 @@ func (lotusService *LotusService) StartImport(swanClient *swan.SwanClient) {
 				continue
 			}
 		} else if lotusService.MarketVersion == constants.MARKET_VERSION_2 {
-			_, graphqlApi, err := config.GetRpcInfoByFile(filepath.Join(config.GetConfig().Market.Repo, "config.toml"))
-			if err != nil {
-				logs.GetLogger().Errorf("get graphqlApi from configuration file failed, error: %+v", err)
-				return
-			}
-			hqlClient, err := hql.NewClient(graphqlApi)
-			if err != nil {
-				logs.GetLogger().Errorf("create graphql client failed, error: %+v", err)
-				return
-			}
-
-			if _, err := uuid.Parse(deal.DealCid); err == nil {
-				dealResp, err := hqlClient.GetDealByUuid(deal.DealCid)
+			if deal.Type != 1 {
+				_, graphqlApi, err := config.GetRpcInfoByFile(filepath.Join(config.GetConfig().Market.Repo, "config.toml"))
 				if err != nil {
-					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "StartImport: not found the deal in the db")
-					logs.GetLogger().Error(err)
-					continue
+					logs.GetLogger().Errorf("get graphqlApi from configuration file failed, error: %+v", err)
+					return
 				}
-				minerId = dealResp.Deal.GetProviderAddress()
-				dealId, err = strconv.ParseUint(dealResp.Deal.GetChainDealID().Value, 10, 64)
-				dealStatus := hql.DealStatus(dealResp.Deal.Checkpoint, dealResp.Deal.Err)
-				onChainStatus = &dealStatus
-				onChainMessage = &dealResp.Deal.Message
-			} else {
-				dealResp, err := hqlClient.GetProposalCid(deal.DealCid)
+				hqlClient, err := hql.NewClient(graphqlApi)
 				if err != nil {
-					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "StartImport: not found the deal in the db")
-					logs.GetLogger().Error(err)
-					continue
+					logs.GetLogger().Errorf("create graphql client failed, error: %+v", err)
+					return
 				}
 
-				minerId = dealResp.LegacyDeal.GetProviderAddress()
-				dealId, err = strconv.ParseUint(dealResp.LegacyDeal.GetChainDealID().Value, 10, 64)
-				onChainStatus = &dealResp.LegacyDeal.Status
-				onChainMessage = &dealResp.LegacyDeal.Message
-			}
+				if _, err := uuid.Parse(deal.DealCid); err == nil {
+					dealResp, err := hqlClient.GetDealByUuid(deal.DealCid)
+					if err != nil {
+						UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "StartImport: not found the deal in the db")
+						logs.GetLogger().Error(err)
+						continue
+					}
+					minerId = dealResp.Deal.GetProviderAddress()
+					dealId, err = strconv.ParseUint(dealResp.Deal.GetChainDealID().Value, 10, 64)
+					dealStatus := hql.DealStatus(dealResp.Deal.Checkpoint, dealResp.Deal.Err)
+					onChainStatus = &dealStatus
+					onChainMessage = &dealResp.Deal.Message
+				} else {
+					dealResp, err := hqlClient.GetProposalCid(deal.DealCid)
+					if err != nil {
+						UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "StartImport: not found the deal in the db")
+						logs.GetLogger().Error(err)
+						continue
+					}
 
+					minerId = dealResp.LegacyDeal.GetProviderAddress()
+					dealId, err = strconv.ParseUint(dealResp.LegacyDeal.GetChainDealID().Value, 10, 64)
+					onChainStatus = &dealResp.LegacyDeal.Status
+					onChainMessage = &dealResp.LegacyDeal.Message
+				}
+				deal.ChainDealId = int64(dealId)
+			}
 		}
 
-		deal.ChainDealId = int64(dealId)
 		lotusService.importingDirs.Store(filepath.Dir(deal.FilePath), struct{}{})
 		go func(minerId string, dealId uint64, onChainStatus *string, onChainMessage string, deal *model.OfflineDeal, aria2AutoDeleteCarFile bool) {
+			logs.GetLogger().Infof("current deal, AllocationID: %d, Type: %d", deal.AllocationID, deal.Type)
+			if deal.Type == 1 {
+				if deal.AllocationID == 0 {
+					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "allocationId is invalid")
+					lotusService.importingDirs.Delete(filepath.Dir(deal.FilePath))
+					return
+				}
+				market := config.GetConfig().Market
+				boostToken, err := GetBoostToken(market.Repo)
+				if err != nil {
+					logs.GetLogger().Error(err)
+					return
+				}
+				rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(config.GetConfig().Market.Repo, "config.toml"))
+				if err != nil {
+					logs.GetLogger().Error(err)
+					return
+				}
+
+				boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
+				if err != nil {
+					logs.GetLogger().Error(err)
+					return
+				}
+				defer closer()
+
+				rej, err := boostClient.BoostDirectDeal(context.TODO(), market.Repo, market.FullNodeApi, deal.ClientAddr, fmt.Sprintf("%d", deal.AllocationID), deal.FilePath, deal.PieceCid, false)
+				var msg string
+				if err != nil {
+					msg = fmt.Sprintf("import deal failed: %w", err.Error())
+				}
+				if rej != nil && rej.Reason != "" {
+					msg = fmt.Sprintf("offline deal %s rejected: %s", deal.DealCid, rej.Reason)
+				}
+				if msg != "" {
+					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, msg)
+				}
+				UpdateStatusAndLog(deal, DEAL_STATUS_IMPORTED, "deal imported")
+				lotusService.importingDirs.Delete(filepath.Dir(deal.FilePath))
+				return
+			}
 			UpdateSwanDealStatus(minerId, dealId, onChainStatus, onChainMessage, deal, aria2AutoDeleteCarFile)
 			lotusService.importingDirs.Delete(filepath.Dir(deal.FilePath))
 		}(minerId, dealId, onChainStatus, *onChainMessage, deal, aria2AutoDeleteCarFile)
@@ -227,19 +271,20 @@ func (lotusService *LotusService) StartScan(swanClient *swan.SwanClient) {
 				onChainStatus = &dealStatus
 				message = dealResp.Deal.Message
 			} else {
-				dealResp, err := hqlClient.GetProposalCid(deal.DealCid)
-				if err != nil {
-					logs.GetLogger().Errorf("taskName: %s, dealCid: %s, get deal info failed, error: %+v", *deal.TaskName, deal.DealCid, err)
-					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "StartScan: not found the deal in the db")
-					continue
+				if deal.Type != 1 {
+					dealResp, err := hqlClient.GetProposalCid(deal.DealCid)
+					if err != nil {
+						logs.GetLogger().Errorf("taskName: %s, dealCid: %s, get deal info failed, error: %+v", *deal.TaskName, deal.DealCid, err)
+						UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "StartScan: not found the deal in the db")
+						continue
+					}
+
+					minerId = dealResp.LegacyDeal.GetProviderAddress()
+					dealId, err = strconv.ParseUint(dealResp.LegacyDeal.GetChainDealID().Value, 10, 64)
+					onChainStatus = &dealResp.LegacyDeal.Status
+					message = dealResp.LegacyDeal.Message
 				}
-
-				minerId = dealResp.LegacyDeal.GetProviderAddress()
-				dealId, err = strconv.ParseUint(dealResp.LegacyDeal.GetChainDealID().Value, 10, 64)
-				onChainStatus = &dealResp.LegacyDeal.Status
-				message = dealResp.LegacyDeal.Message
 			}
-
 			UpdateSwanDealStatus(minerId, dealId, onChainStatus, message, deal, aria2AutoDeleteCarFile)
 		}
 	}
@@ -296,6 +341,55 @@ func CorrectDealStatus(startEpoch int, minerId string, dealId uint64, onChainSta
 }
 
 func UpdateSwanDealStatus(minerId string, dealId uint64, onChainStatus *string, onChainMessage string, deal *model.OfflineDeal, aria2AutoDeleteCarFile bool) {
+	if deal.Type == 1 {
+		if onChainStatus == nil {
+			var status string
+			onChainStatus = &status
+		}
+		status, err := AllocationDealStatus(deal.AllocationID, deal.MinerFid, *onChainStatus)
+		if err != nil {
+			logs.GetLogger().Error(GetLog(deal, err.Error()))
+			return
+		}
+		onChainStatus = status
+
+		switch *onChainStatus {
+		case ONCHAIN_DEAL_STATUS_ERROR:
+			UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "deal error", *onChainStatus, onChainMessage)
+			if aria2AutoDeleteCarFile {
+				logs.GetLogger().Infof("dealId:%d, taskName:%s, dealCid|dealUuid:%s, has been %s, delete the car file, filePath:%s", dealId, *deal.TaskName, deal.DealCid, *onChainStatus, deal.FilePath)
+				DeleteDownloadedFiles(deal.FilePath)
+			}
+		case ONCHAIN_DEAL_STATUS_ACTIVE:
+			UpdateStatusAndLog(deal, DEAL_STATUS_ACTIVE, "deal has been completed", *onChainStatus)
+			if aria2AutoDeleteCarFile {
+				logs.GetLogger().Infof("dealId:%d, taskName:%s, dealCid|dealUuid:%s, has been %s, delete the car file, filePath:%s", dealId, *deal.TaskName, deal.DealCid, *onChainStatus, deal.FilePath)
+				DeleteDownloadedFiles(deal.FilePath)
+			}
+			return
+		}
+		return
+	}
+
+	market := config.GetConfig().Market
+	boostToken, err := GetBoostToken(market.Repo)
+	if err != nil {
+		logs.GetLogger().Error(err)
+		return
+	}
+	rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(config.GetConfig().Market.Repo, "config.toml"))
+	if err != nil {
+		logs.GetLogger().Error(err)
+		return
+	}
+
+	boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
+	if err != nil {
+		logs.GetLogger().Error(err)
+		return
+	}
+	defer closer()
+
 	if dealId > 0 {
 		status, err := CorrectDealStatus(deal.StartEpoch, minerId, dealId, *onChainStatus)
 		if err != nil {
@@ -358,27 +452,10 @@ func UpdateSwanDealStatus(minerId string, dealId uint64, onChainStatus *string, 
 				return
 			}
 		} else {
-			market := config.GetConfig().Market
-			boostToken, err := GetBoostToken(market.Repo)
-			if err != nil {
-				logs.GetLogger().Error(err)
-				return
-			}
-			rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(config.GetConfig().Market.Repo, "config.toml"))
-			if err != nil {
-				logs.GetLogger().Error(err)
-				return
-			}
-
-			boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
-			if err != nil {
-				logs.GetLogger().Error(err)
-				return
-			}
-			defer closer()
-
 			if _, err := uuid.Parse(deal.DealCid); err == nil {
-				rej, err := boostClient.OfflineDealWithData(context.TODO(), deal.DealCid, deal.FilePath, false)
+				var rej *provider.DealRejectionInfo
+				rej, err = boostClient.OfflineDealWithData(context.TODO(), deal.DealCid, deal.FilePath, false)
+
 				var msg string
 				if err != nil {
 					msg = fmt.Sprintf("import deal failed: %w", err.Error())
@@ -390,11 +467,8 @@ func UpdateSwanDealStatus(minerId string, dealId uint64, onChainStatus *string, 
 					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, msg)
 				}
 			} else {
-				err = boostClient.OfflineDealWithDataByMarket(context.TODO(), deal.DealCid, deal.FilePath)
-				if err != nil {
-					UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "import deal failed", err.Error())
-					return
-				}
+				UpdateStatusAndLog(deal, DEAL_STATUS_IMPORT_FAILED, "import deal failed, this deal is not supported,please use boost to send the deal")
+				return
 			}
 		}
 
@@ -406,4 +480,26 @@ func UpdateSwanDealStatus(minerId string, dealId uint64, onChainStatus *string, 
 		}
 		UpdateStatusAndLog(deal, deal.Status, *onChainStatus, onChainMessage)
 	}
+}
+
+func AllocationDealStatus(allocationID uint64, minerId string, onChainStatus string) (*string, error) {
+	dealInfo, err := lotusService.LotusClient.LotusStateClaim(minerId, allocationID)
+	if err != nil {
+		logs.GetLogger().Errorf("get deal info by allocationID failed,dealId: %d,error: %s ", allocationID, err.Error())
+		return nil, err
+	}
+
+	logs.GetLogger().Infof("allocationID: %d, AllocationDealStatus: %+v", allocationID, dealInfo)
+
+	if strings.Contains(minerId, strconv.Itoa(int(dealInfo.Result.Provider))) {
+		onChainStatus = "StorageDealActive"
+		return &onChainStatus, err
+	}
+
+	if dealInfo.Result.Sector > 0 {
+		onChainStatus = "StorageDealError"
+	} else {
+		onChainStatus = ONCHAIN_DEAL_STATUS_SEALING
+	}
+	return &onChainStatus, nil
 }
