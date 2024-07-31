@@ -7,6 +7,7 @@ import (
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path"
@@ -219,35 +220,21 @@ func checkLotusConfig() {
 			}
 			logs.GetLogger().Info("boostd enable leveldb successful")
 		}
-
-		//rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(market.Repo, "config.toml"))
-		//if err != nil {
-		//	logs.GetLogger().Error(err)
-		//	return
-		//}
-
 		// start boostd
 		boostPid, err := startBoost(market.Repo, market.BoostLog, market.FullNodeApi)
 		if err != nil {
 			logs.GetLogger().Fatal(err)
 			return
 		}
-		//boostToken, err := GetBoostToken(market.Repo)
-		//boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
-		//if err != nil {
-		//	logs.GetLogger().Error(err)
-		//	return
-		//}
-		//defer closer()
-		//
-		//for {
-		//	if err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
-		//		break
-		//	} else {
-		//		logs.GetLogger().Errorf("failed to check boostd health, error: %v, retrying", err)
-		//	}
-		//	time.Sleep(1 * time.Second)
-		//}
+
+		for {
+			if checkPortListening() {
+				break
+			} else {
+				logs.GetLogger().Infof("starting boostd service, recheck")
+			}
+			time.Sleep(1 * time.Second)
+		}
 
 		logs.GetLogger().Infof("successfully started boostd rpc service, pid: %d", boostPid)
 		BoostPid = boostPid
@@ -261,6 +248,15 @@ func checkLotusConfig() {
 
 	logs.GetLogger().Info("current epoch:", *currentEpoch)
 	logs.GetLogger().Info("Pass testing lotus config.")
+}
+
+func checkPortListening() bool {
+	conn, err := net.DialTimeout("tcp", "127.0.0.1:8080", 2*time.Second)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
 }
 
 func swanSendHeartbeatRequest() {
