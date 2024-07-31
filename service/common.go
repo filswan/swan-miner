@@ -242,7 +242,7 @@ func checkLotusConfig() {
 		defer closer()
 
 		for {
-			if _, err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
+			if err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
 				break
 			} else {
 				logs.GetLogger().Errorf("failed to check boostd health, error: %v, retrying", err)
