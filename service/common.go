@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/filswan/swan-boost-lib/provider"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
@@ -221,11 +220,11 @@ func checkLotusConfig() {
 			logs.GetLogger().Info("boostd enable leveldb successful")
 		}
 
-		rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(market.Repo, "config.toml"))
-		if err != nil {
-			logs.GetLogger().Error(err)
-			return
-		}
+		//rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(market.Repo, "config.toml"))
+		//if err != nil {
+		//	logs.GetLogger().Error(err)
+		//	return
+		//}
 
 		// start boostd
 		boostPid, err := startBoost(market.Repo, market.BoostLog, market.FullNodeApi)
@@ -233,22 +232,22 @@ func checkLotusConfig() {
 			logs.GetLogger().Fatal(err)
 			return
 		}
-		boostToken, err := GetBoostToken(market.Repo)
-		boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
-		if err != nil {
-			logs.GetLogger().Error(err)
-			return
-		}
-		defer closer()
-
-		for {
-			if err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
-				break
-			} else {
-				logs.GetLogger().Errorf("failed to check boostd health, error: %v, retrying", err)
-			}
-			time.Sleep(1 * time.Second)
-		}
+		//boostToken, err := GetBoostToken(market.Repo)
+		//boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
+		//if err != nil {
+		//	logs.GetLogger().Error(err)
+		//	return
+		//}
+		//defer closer()
+		//
+		//for {
+		//	if err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
+		//		break
+		//	} else {
+		//		logs.GetLogger().Errorf("failed to check boostd health, error: %v, retrying", err)
+		//	}
+		//	time.Sleep(1 * time.Second)
+		//}
 
 		logs.GetLogger().Infof("successfully started boostd rpc service, pid: %d", boostPid)
 		BoostPid = boostPid
