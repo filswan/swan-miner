@@ -1,6 +1,8 @@
 module swan-provider
 
-go 1.20
+go 1.22
+
+toolchain go1.22.3
 
 require (
 	github.com/BurntSushi/toml v1.3.2
@@ -168,7 +170,7 @@ require (
 	github.com/filecoin-project/go-hamt-ipld/v3 v3.1.0 // indirect
 	github.com/filecoin-project/go-jsonrpc v0.3.1 // indirect
 	github.com/filecoin-project/go-padreader v0.0.1 // indirect
-	github.com/filecoin-project/go-state-types v0.13.1 // indirect
+	github.com/filecoin-project/go-state-types v0.14.0-rc1 // indirect
 	github.com/filecoin-project/go-statemachine v1.0.3 // indirect
 	github.com/filecoin-project/go-statestore v0.2.0 // indirect
 	github.com/filecoin-project/kubo-api-client v0.27.0 // indirect
