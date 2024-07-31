@@ -227,14 +227,6 @@ func checkLotusConfig() {
 			return
 		}
 
-		//// start boostd-data
-		//boostDataPid, err := startBoostData(market.Repo, market.BoostDataLog)
-		//if err != nil {
-		//	logs.GetLogger().Errorf("start boostd-data service failed, error: %+v", err)
-		//	os.Exit(0)
-		//}
-		//BoostDataPid = boostDataPid
-
 		// start boostd
 		boostPid, err := startBoost(market.Repo, market.BoostLog, market.FullNodeApi)
 		if err != nil {
@@ -250,15 +242,15 @@ func checkLotusConfig() {
 		defer closer()
 
 		for {
-			if err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
+			if _, err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
 				break
 			} else {
-				logs.GetLogger().Errorf("boost started failed, error: %v", err)
+				logs.GetLogger().Errorf("failed to check boostd health, error: %v, retrying", err)
 			}
 			time.Sleep(1 * time.Second)
 		}
 
-		logs.GetLogger().Infof("start boostd rpc service successful, pid: %d", boostPid)
+		logs.GetLogger().Infof("successfully started boostd rpc service, pid: %d", boostPid)
 		BoostPid = boostPid
 	}
 
@@ -491,7 +483,7 @@ func startBoost(repo, logFile, fullNodeApi string) (int, error) {
 
 	if err != nil {
 		logs.GetLogger().Error(err)
-		return 0, errors.Wrap(err, "start boostd process failed")
+		return 0, errors.Wrap(err, "failed to start boostd process")
 	}
 	time.Sleep(10 * time.Second)
 	return boostProcess.Pid, nil
