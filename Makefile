@@ -58,7 +58,7 @@ build_win: test
 
 build_boost:
 	git clone https://github.com/filecoin-project/boost.git
-	cd boost && git checkout disable-index-provider
+	cd boost && git checkout v2.3.0
 	cd boost && make build && sudo mv boostd /usr/local/bin/
 	rm -rf boost
 .PHONY: build_boost
