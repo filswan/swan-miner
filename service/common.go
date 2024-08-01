@@ -233,7 +233,7 @@ func checkLotusConfig() {
 			} else {
 				logs.GetLogger().Infof("starting boostd service, recheck")
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 
 		logs.GetLogger().Infof("successfully started boostd rpc service, pid: %d", boostPid)
