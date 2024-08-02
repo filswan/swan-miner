@@ -418,6 +418,7 @@ github.com/filswan/go-swan-lib v0.3.4/go.mod h1:o66+BeOgakzHTK0HgGLV1AJEhFU8Xjj3
 github.com/filswan/swan-boost-lib v0.0.4-0.20240801021243-e1db4d7f6ff5 h1:FzqQ7g38yOi07xmJ+pOkULlxGlHNIM+jJm1BghY/ka0=
 github.com/filswan/swan-boost-lib v0.0.4-0.20240801021243-e1db4d7f6ff5/go.mod h1:ZJ31OcSwuT1N6CbCvl4v1nmdYRvsd0tE76sBOsgu8do=
 github.com/filswan/swan-boost-lib v0.0.4-0.20240801064456-52897b84e870/go.mod h1:ZJ31OcSwuT1N6CbCvl4v1nmdYRvsd0tE76sBOsgu8do=
+github.com/filswan/swan-boost-lib v0.0.4/go.mod h1:ZJ31OcSwuT1N6CbCvl4v1nmdYRvsd0tE76sBOsgu8do=
 github.com/flynn/go-shlex v0.0.0-20150515145356-3f9db97f8568/go.mod h1:xEzjJPgXI435gkrCt3MPfRiAkVrwSbHsst4LCFVfpJc=
 github.com/flynn/noise v1.0.0/go.mod h1:xbMo+0i6+IGbYdJhF31t2eR1BIU0CYc12+BNAKwUTag=
 github.com/flynn/noise v1.1.0 h1:KjPQoQCEFdZDiP03phOvGi11+SVVhBG2wOWAorLsstg=
