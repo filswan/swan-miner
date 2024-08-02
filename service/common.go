@@ -4,10 +4,10 @@ import (
 	"context"
 	"fmt"
 	"github.com/fatih/color"
-	"github.com/filswan/swan-boost-lib/provider"
 	"github.com/pkg/errors"
 	"io/ioutil"
 	"log"
+	"net"
 	"os"
 	"os/exec"
 	"path"
@@ -220,45 +220,23 @@ func checkLotusConfig() {
 			}
 			logs.GetLogger().Info("boostd enable leveldb successful")
 		}
-
-		rpcApi, _, err := config.GetRpcInfoByFile(filepath.Join(market.Repo, "config.toml"))
-		if err != nil {
-			logs.GetLogger().Error(err)
-			return
-		}
-
-		//// start boostd-data
-		//boostDataPid, err := startBoostData(market.Repo, market.BoostDataLog)
-		//if err != nil {
-		//	logs.GetLogger().Errorf("start boostd-data service failed, error: %+v", err)
-		//	os.Exit(0)
-		//}
-		//BoostDataPid = boostDataPid
-
 		// start boostd
 		boostPid, err := startBoost(market.Repo, market.BoostLog, market.FullNodeApi)
 		if err != nil {
 			logs.GetLogger().Fatal(err)
 			return
 		}
-		boostToken, err := GetBoostToken(market.Repo)
-		boostClient, closer, err := provider.NewClient(boostToken, rpcApi)
-		if err != nil {
-			logs.GetLogger().Error(err)
-			return
-		}
-		defer closer()
 
 		for {
-			if err = boostClient.CheckBoostStatus(context.TODO()); err == nil {
+			if checkPortListening() {
 				break
 			} else {
-				logs.GetLogger().Errorf("boost started failed, error: %v", err)
+				logs.GetLogger().Infof("starting boostd service, recheck again")
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(3 * time.Second)
 		}
 
-		logs.GetLogger().Infof("start boostd rpc service successful, pid: %d", boostPid)
+		logs.GetLogger().Infof("successfully started boostd rpc service, pid: %d", boostPid)
 		BoostPid = boostPid
 	}
 
@@ -270,6 +248,15 @@ func checkLotusConfig() {
 
 	logs.GetLogger().Info("current epoch:", *currentEpoch)
 	logs.GetLogger().Info("Pass testing lotus config.")
+}
+
+func checkPortListening() bool {
+	conn, err := net.DialTimeout("tcp", "127.0.0.1:8080", 2*time.Second)
+	if err != nil {
+		return false
+	}
+	defer conn.Close()
+	return true
 }
 
 func swanSendHeartbeatRequest() {
@@ -491,7 +478,7 @@ func startBoost(repo, logFile, fullNodeApi string) (int, error) {
 
 	if err != nil {
 		logs.GetLogger().Error(err)
-		return 0, errors.Wrap(err, "start boostd process failed")
+		return 0, errors.Wrap(err, "failed to start boostd process")
 	}
 	time.Sleep(10 * time.Second)
 	return boostProcess.Pid, nil
