@@ -231,7 +231,7 @@ func checkLotusConfig() {
 			if checkPortListening() {
 				break
 			} else {
-				logs.GetLogger().Infof("starting boostd service, recheck")
+				logs.GetLogger().Infof("starting boostd service, recheck again")
 			}
 			time.Sleep(3 * time.Second)
 		}
