@@ -32,7 +32,7 @@ Swan Provider listens to offline deals that come from the Swan platform. It prov
 #### Start Lotus-miner
 Before launching the `swan-provider`, you must ensure that `Lotus-miner` is running normally. and `Lotus-miner` token is necessary for importing deals.
 ```shell
-lotus-miner auth create-token --perm write
+lotus-miner auth create-token --perm admin
 ```
 Note that the `Lotus-miner` needs to be running in the background!
 The created token is located at `$LOTUS_MINER_PATH/token`
@@ -53,7 +53,7 @@ export SWAN_PATH="/data/.swan"
 ### Option:one: **Prebuilt package**: See [release assets](https://github.com/filswan/go-swan-provider/releases)
 ####  Build Instructions
 ```shell
-wget --no-check-certificate https://github.com/filswan/go-swan-provider/releases/download/v2.5.0/install.sh
+wget --no-check-certificate https://github.com/filswan/go-swan-provider/releases/download/v2.6.0/install.sh
 chmod +x ./install.sh
 ./install.sh
 ```
@@ -64,7 +64,7 @@ chmod +x ./install.sh
 ```
 ulimit -SHn 1048576
 export SWAN_PATH="/data/.swan"
-nohup swan-provider-2.5.0-linux-amd64 daemon >> swan-provider.log 2>&1 & 
+nohup swan-provider-2.6.0-linux-amd64 daemon >> swan-provider.log 2>&1 & 
 ```
 ### Option:two: Source Code
 Building the `swan-provider` requires some system dependencies:
@@ -93,7 +93,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```shell
 git clone https://github.com/filswan/go-swan-provider.git
 cd go-swan-provider
-git checkout release-2.5.0
+git checkout release-2.6.0
 ./build_from_source.sh
 ```
 

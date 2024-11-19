@@ -7,7 +7,7 @@ require (
 	github.com/Khan/genqlient v0.5.0
 	github.com/fatih/color v1.16.0
 	github.com/filswan/go-swan-lib v0.3.4
-	github.com/filswan/swan-boost-lib v0.0.5-0.20241118083435-a7fa8895f001
+	github.com/filswan/swan-boost-lib v0.0.5
 	github.com/gin-gonic/gin v1.9.1
 	github.com/google/uuid v1.6.0
 	github.com/itsjamie/gin-cors v0.0.0-20160420130702-97b4a9da7933

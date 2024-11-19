@@ -32,7 +32,7 @@ Swan Provider 接收来自 Swan Platform 的离线订单。提供以下功能：
 #### 启动 Lotus-miner
 在启动 `swan-provider`之前，请确保 `Lotus-miner` 正常运行。您需要使用 `Lotus-miner` 令牌导入订单。
 ```shell
-lotus-miner auth create-token --perm write
+lotus-miner auth create-token --perm admin
 ```
 注意，请保持 `Lotus-miner` 在后台运行!
 生成的令牌位于 `$LOTUS_MINER_PATH/token`
@@ -53,7 +53,7 @@ export SWAN_PATH="/data/.swan"
 ### 选项:one: **预构建包**: 参照 [release assets](https://github.com/filswan/go-swan-provider/releases)
 ####  构建指南
 ```shell
-wget --no-check-certificate https://github.com/filswan/go-swan-provider/releases/download/v2.5.0/install.sh
+wget --no-check-certificate https://github.com/filswan/go-swan-provider/releases/download/v2.6.0/install.sh
 chmod +x ./install.sh
 ./install.sh
 ```
@@ -64,7 +64,7 @@ chmod +x ./install.sh
 ```
 ulimit -SHn 1048576
 export SWAN_PATH="/data/.swan"
-nohup swan-provider-2.4.0-linux-amd64 daemon >> swan-provider.log 2>&1 & 
+nohup swan-provider-2.6.0-linux-amd64 daemon >> swan-provider.log 2>&1 & 
 ```
 ### 选项:two: 从源代码构建
 构建 `swan-provider` 需要安装以下依赖包:
@@ -93,7 +93,7 @@ curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh
 ```shell
 git clone https://github.com/filswan/go-swan-provider.git
 cd go-swan-provider
-git checkout release-2.4.0
+git checkout release-2.6.0
 ./build_from_source.sh
 ```
 
