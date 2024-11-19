@@ -3,6 +3,7 @@ package service
 import (
 	"context"
 	"fmt"
+	"github.com/BurntSushi/toml"
 	"github.com/fatih/color"
 	"github.com/pkg/errors"
 	"io/ioutil"
@@ -228,7 +229,7 @@ func checkLotusConfig() {
 		}
 
 		for {
-			if checkPortListening() {
+			if checkPortListening(market.Repo) {
 				break
 			} else {
 				logs.GetLogger().Infof("starting boostd service, recheck again")
@@ -250,8 +251,23 @@ func checkLotusConfig() {
 	logs.GetLogger().Info("Pass testing lotus config.")
 }
 
-func checkPortListening() bool {
-	conn, err := net.DialTimeout("tcp", "127.0.0.1:8080", 2*time.Second)
+func checkPortListening(marketRepo string) bool {
+	var boostConfig struct {
+		API struct {
+			ListenAddress string
+		}
+	}
+
+	if _, err := toml.DecodeFile(filepath.Join(marketRepo, "config.toml"), &boostConfig); err != nil {
+		return false
+	}
+
+	var rpcUrl = fmt.Sprintf("%s:%d", "127.0.0.1", constants.DEFAULT_API_PORT)
+	if len(boostConfig.API.ListenAddress) > 0 {
+		splits := strings.Split(boostConfig.API.ListenAddress, "/")
+		rpcUrl = fmt.Sprintf("%s:%s", splits[2], splits[4])
+	}
+	conn, err := net.DialTimeout("tcp", rpcUrl, 2*time.Second)
 	if err != nil {
 		return false
 	}
